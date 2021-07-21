@@ -4,7 +4,7 @@ const db = require("./models");
 const genreRouter = require("./routes/genre.routes");
 const artistRouter = require("./routes/artist.routes");
 const movieRouter = require("./routes/movie.routes");
-
+const userRouter = require("./routes/user.routes");
 const app = express();
 
 //middlewares
@@ -14,6 +14,9 @@ app.use(
     optionsSuccessStatus: 200,
   })
 );
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //database connection
 db.mongoose
@@ -39,5 +42,6 @@ app.get("/", (req, res) => {
 app.use("/api/genres", genreRouter);
 app.use("/api/artists", artistRouter);
 app.use("/api/movies", movieRouter);
+app.use("/api/auth", userRouter);
 
 module.exports = app;
