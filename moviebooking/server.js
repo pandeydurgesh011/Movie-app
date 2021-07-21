@@ -14,5 +14,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 server listening on port 9000`);
+  console.log(`server listening on port 9000`);
 });
