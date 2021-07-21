@@ -34,9 +34,12 @@ async function signUp(req, res) {
 }
 
 async function login(req, res) {
-  const userNameAndPassword = atob(req.headers["Authorization"]).split(" ")[1];
-  const { username, password } = userNameAndPassword.split(":");
+  //decrypt username and password by seperating the basic word
   try {
+    const encodedAuth = req.headers["authorization"];
+    const userNameAndPassword = atob(encodedAuth.split(" ")[1]);
+    const username = userNameAndPassword.split(":")[0];
+    const password = userNameAndPassword.split(":")[1];
     const user = await User.findOne({ username: username });
     if (user === null) throw new Error("user not found");
     if (user.password === password) {
@@ -48,7 +51,10 @@ async function login(req, res) {
       })
         .then(updateUser => {
           if (updateUser === null) throw new Error("Unable to update user");
-          res.status(200).send(updateUser);
+          res.status(200).send({
+            id: user.uuid,
+            "access-token": user.accesstoken,
+          });
         })
         .catch(err => {
           res.status(500).send(err.message || "login failed");
@@ -64,7 +70,7 @@ async function login(req, res) {
 async function logout(req, res) {
   const uuid = req.body.uuid;
   const update = { isLoggedIn: false, accesstoken: "", uuid: "" };
-  User.findOneAndUpdate({ uuid: uuid }, update)
+  User.findOneAndUpdate({ uuid: uuid }, update, { useFindAndModify: false })
     .then(data => {
       if (data === null) throw new error("unable to logout");
       res.send({ message: "Logged Out successfully." });
@@ -75,8 +81,8 @@ async function logout(req, res) {
 }
 
 async function getCouponCode(req, res) {
-  const accesstoken = req.header["Authorization"].split(" ")[1];
-  if (!uuid) {
+  const accesstoken = atob(req.header["authorization"].split(" ")[1]);
+  if (!accesstoken) {
     return res.status(401).send("user not logged in");
   }
   try {
@@ -93,7 +99,7 @@ async function getCouponCode(req, res) {
 
 async function bookShow(req, res) {
   try {
-    const accessToken = req.header["Authorization"].split(" ")[1];
+    const accessToken = atob(req.header["authorization"].split(" ")[1]);
     if (!accessToken) throw new Error("user not logged in");
     const uuid = req.body.uuid;
     const bookingRequest = req.body.bookingRequest;
